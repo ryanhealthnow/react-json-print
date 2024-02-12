@@ -97,7 +97,7 @@ const getData = (props: ReactJsonPrintProps): DataObject => {
   if (dataString) {
     try {
       return JSON.parse(dataString);
-    } catch (error: any) {
+    } catch (error) {
       return `ERROR: ${error.message}`;
     }
   }
