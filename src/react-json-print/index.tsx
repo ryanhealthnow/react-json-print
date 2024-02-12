@@ -1,13 +1,13 @@
 // eslint-disable-next-line
-import * as React from 'react';
+import * as React from "react";
 import {
   useState,
   MouseEvent,
   useContext,
   createContext,
   useMemo,
-} from 'react';
-import './styles.css';
+} from "react";
+import "./styles.css";
 
 type DataObject = string | boolean | null | number | object | DataObject[];
 
@@ -65,21 +65,21 @@ interface ReactJsonPrintProps {
    * @default undefined
    */
   dataKey?: string;
-};
+}
 
 enum DataType {
-  ARRAY = 'array',
-  OBJECT = 'object',
-  STRING = 'string',
-  NUMBER = 'number',
-  BOOLEAN = 'boolean',
-  NULL = 'null',
-  UNDEFINED = 'undefined',
+  ARRAY = "array",
+  OBJECT = "object",
+  STRING = "string",
+  NUMBER = "number",
+  BOOLEAN = "boolean",
+  NULL = "null",
+  UNDEFINED = "undefined",
 }
 
 enum ExpandState {
-  OPENED = 'opened',
-  CLOSED = 'closed',
+  OPENED = "opened",
+  CLOSED = "closed",
 }
 
 const TreeContext = createContext({
@@ -89,15 +89,15 @@ const TreeContext = createContext({
 
 const getData = (props: ReactJsonPrintProps): DataObject => {
   const { dataObject, dataString } = props;
-  if (typeof dataObject === 'boolean') return dataObject;
-  if (typeof dataObject === 'number') return dataObject;
+  if (typeof dataObject === "boolean") return dataObject;
+  if (typeof dataObject === "number") return dataObject;
   if (dataObject) {
     return dataObject;
   }
   if (dataString) {
     try {
       return JSON.parse(dataString);
-    } catch (error) {
+    } catch (error: any) {
       return `ERROR: ${error.message}`;
     }
   }
@@ -108,19 +108,20 @@ const getDataType = (data: DataObject): DataType => {
   if (data === null) return DataType.NULL;
 
   if (
-    data !== null
-    && data !== undefined
-    && !Array.isArray(data)
-    && typeof data === 'object'
-  ) return DataType.OBJECT;
+    data !== null &&
+    data !== undefined &&
+    !Array.isArray(data) &&
+    typeof data === "object"
+  )
+    return DataType.OBJECT;
 
   if (Array.isArray(data)) return DataType.ARRAY;
 
-  if (typeof data === 'string') return DataType.STRING;
+  if (typeof data === "string") return DataType.STRING;
 
-  if (typeof data === 'number') return DataType.NUMBER;
+  if (typeof data === "number") return DataType.NUMBER;
 
-  if (typeof data === 'boolean') return DataType.BOOLEAN;
+  if (typeof data === "boolean") return DataType.BOOLEAN;
 
   return DataType.UNDEFINED;
 };
@@ -131,41 +132,38 @@ const getDataValue = (data: DataObject, dataType: DataType): DataObject => {
       return `${data}`;
     }
     case DataType.NULL: {
-      return 'null';
+      return "null";
     }
     case DataType.ARRAY: {
       const dataArray = data as Array<DataObject>;
-      return `Array[${dataArray.length}]`
+      return `Array[${dataArray.length}]`;
     }
     case DataType.OBJECT: {
       const dataObject = data as object;
       const objectLength: number = Object.keys(dataObject).length;
-      return objectLength
-        ? 'Object'
-        : 'Object (empty)';
+      return objectLength ? "Object" : "Object (empty)";
     }
     case DataType.UNDEFINED: {
-      return 'undefined';
+      return "undefined";
     }
     default:
       return data;
   }
-}
+};
 
 const getDataList = (
   data: DataObject,
   dataType: DataType,
   currentDepth: number | undefined,
-  dataKey: string,
+  dataKey: string
 ): Array<JSX.Element> | null => {
-  const computedCurrentDepth = currentDepth || currentDepth === 0
-    ? currentDepth + 1
-    : 0;
+  const computedCurrentDepth =
+    currentDepth || currentDepth === 0 ? currentDepth + 1 : 0;
   switch (dataType) {
     case DataType.OBJECT: {
       const dataObject = data as object;
-      return Object.entries(dataObject)
-        .map(([key, value]: [DataKey, DataObject]) => {
+      return Object.entries(dataObject).map(
+        ([key, value]: [DataKey, DataObject]) => {
           const computedKey: string = `${dataKey}-${key}-${computedCurrentDepth}`;
           return (
             <ReactJsonPrint
@@ -175,7 +173,9 @@ const getDataList = (
               currentDepth={computedCurrentDepth}
               dataKey={computedKey}
             />
-          )});
+          );
+        }
+      );
     }
     case DataType.ARRAY: {
       const dataArray = data as Array<DataObject>;
@@ -189,35 +189,31 @@ const getDataList = (
             currentDepth={computedCurrentDepth}
             dataKey={computedKey}
           />
-      )})
+        );
+      });
     }
     default:
       return null;
   }
-}
+};
 
-const ReactJsonPrint: React.FunctionComponent<ReactJsonPrintProps> = (props: ReactJsonPrintProps) => {
-  const {
-    expanded,
-    depth,
-    currentDepth,
-    dataKey,
-    objectKey,
-  } = props;
+const ReactJsonPrint: React.FunctionComponent<ReactJsonPrintProps> = (
+  props: ReactJsonPrintProps
+) => {
+  const { expanded, depth, currentDepth, dataKey, objectKey } = props;
 
   const { expandedTreeState, maxDepth } = useContext(TreeContext);
-  const initExpandedState: ExpandState = expanded || expandedTreeState === ExpandState.OPENED
-    ? ExpandState.OPENED
-    : ExpandState.CLOSED
+  const initExpandedState: ExpandState =
+    expanded || expandedTreeState === ExpandState.OPENED
+      ? ExpandState.OPENED
+      : ExpandState.CLOSED;
   const [expandedState, setExpandedState] = useState(initExpandedState);
 
   const data: DataObject = getData(props);
   const dataType: DataType = getDataType(data);
   const dataValue: DataObject = getDataValue(data, dataType);
 
-  const computedKey: string = dataKey
-    ? `${dataKey}`
-    : `${objectKey}`;
+  const computedKey: string = dataKey ? `${dataKey}` : `${objectKey}`;
 
   /**
    * Toggles the nested node collapse state.
@@ -227,121 +223,107 @@ const ReactJsonPrint: React.FunctionComponent<ReactJsonPrintProps> = (props: Rea
   const onHandleClick = (e: MouseEvent): void => {
     e.preventDefault();
 
-    const newState: ExpandState = expandedState === ExpandState.OPENED
-      ? ExpandState.CLOSED
-      : ExpandState.OPENED;
+    const newState: ExpandState =
+      expandedState === ExpandState.OPENED
+        ? ExpandState.CLOSED
+        : ExpandState.OPENED;
 
     setExpandedState(newState);
-  }
+  };
 
   /**
    * Data type classes
    */
   const dataTypeClass: string = [
-    'data__type',
+    "data__type",
     `data__type--${dataType}`,
-    `data__type--${expandedState}`
-  ].join(' ');
+    `data__type--${expandedState}`,
+  ].join(" ");
 
   /**
    * Wrapper class for top level key. Can contain a handle if there is a list.
    */
-  const dataHandleClass: string = dataType === DataType.ARRAY || dataType === DataType.OBJECT
-    ? ['data__list-handle', `data__list-handle--${expandedState}`].join(' ')
-    : 'data__no-list';
+  const dataHandleClass: string =
+    dataType === DataType.ARRAY || dataType === DataType.OBJECT
+      ? ["data__list-handle", `data__list-handle--${expandedState}`].join(" ")
+      : "data__no-list";
 
   /**
    * Classes for the data list wrapper
    */
   const dataListItemsClass: string = [
-    'data__list-items',
-    `data__list-items--${expandedState}`
-  ].join(' ');
+    "data__list-items",
+    `data__list-items--${expandedState}`,
+  ].join(" ");
 
   /**
    * Dynamically create classes for the data value wrapper
    */
   const dataValueClass = (): string => {
-    const dataValueClass = [
-      'data__value',
-    ];
+    const dataValueClass = ["data__value"];
 
     if (dataType !== DataType.OBJECT && dataType !== DataType.ARRAY) {
-      dataValueClass.push(
-        'data__value--primitive',
-        `data__value--${dataType}`,
-      );
+      dataValueClass.push("data__value--primitive", `data__value--${dataType}`);
     }
 
     if (dataType === DataType.ARRAY) {
-      dataValueClass.push(
-        'data__value--array',
-      );
+      dataValueClass.push("data__value--array");
     }
 
     if (dataType === DataType.OBJECT) {
-      dataValueClass.push(
-        'data__value--object',
-      );
+      dataValueClass.push("data__value--object");
     }
 
-    return dataValueClass.join(' ');
+    return dataValueClass.join(" ");
   };
 
   /**
    * Wraps context provider only around top level nodes.
    * We then pass in global state for depth and expanded to all child nodes.
    */
-  const TopLevelList: JSX.Element = useMemo(() => (
-    <TreeContext.Provider value={{
-      expandedTreeState: expanded
-        ? ExpandState.OPENED
-        : ExpandState.CLOSED,
-      maxDepth: depth as number,
-    }}>
-      {
-        dataType === DataType.OBJECT || dataType === DataType.ARRAY
-          ? (
-            <div className={dataListItemsClass}>
-              {getDataList(data, dataType, 1, computedKey)}
-            </div>
-          )
-          : null
-      }
-    </TreeContext.Provider>
-    // Prevents children from re-rendering when parent ExpandState is changed.
-  ), [computedKey, data, dataListItemsClass, dataType, depth, expanded]);
+  const TopLevelList: JSX.Element = useMemo(
+    () => (
+      <TreeContext.Provider
+        value={{
+          expandedTreeState: expanded ? ExpandState.OPENED : ExpandState.CLOSED,
+          maxDepth: depth as number,
+        }}
+      >
+        {dataType === DataType.OBJECT || dataType === DataType.ARRAY ? (
+          <div className={dataListItemsClass}>
+            {getDataList(data, dataType, 1, computedKey)}
+          </div>
+        ) : null}
+      </TreeContext.Provider>
+      // Prevents children from re-rendering when parent ExpandState is changed.
+    ),
+    [computedKey, data, dataListItemsClass, dataType, depth, expanded]
+  );
 
   /**
    * Children nodes that may be hidden if depth is set
    */
-  const NestedList: JSX.Element | null = useMemo(() => (dataType === DataType.OBJECT || dataType === DataType.ARRAY
-    ? (
-      <div className={dataListItemsClass}>
-        {maxDepth !== 0 && currentDepth as number > maxDepth
-          ? (<div>...</div>)
-          : getDataList(data, dataType, currentDepth, computedKey)}
-      </div>
-    )
-    : null
+  const NestedList: JSX.Element | null = useMemo(
+    () =>
+      dataType === DataType.OBJECT || dataType === DataType.ARRAY ? (
+        <div className={dataListItemsClass}>
+          {maxDepth !== 0 && (currentDepth as number) > maxDepth ? (
+            <div>...</div>
+          ) : (
+            getDataList(data, dataType, currentDepth, computedKey)
+          )}
+        </div>
+      ) : null,
     // Prevents children from re-rendering when parent ExpandState is changed.
-  ), [computedKey, currentDepth, data, dataListItemsClass, dataType, maxDepth]);
+    [computedKey, currentDepth, data, dataListItemsClass, dataType, maxDepth]
+  );
 
   return (
     <div className={dataTypeClass}>
-      <span
-        className={dataHandleClass}
-        onClick={onHandleClick}
-      >
-        <span className="data__key">
-          {objectKey}
-        </span>
+      <span className={dataHandleClass} onClick={onHandleClick}>
         <span className={dataValueClass()}>{dataValue}</span>
       </span>
-      { currentDepth === undefined
-        ? <>{ TopLevelList }</>
-        : <>{ NestedList }</>}
-
+      {currentDepth === undefined ? <>{TopLevelList}</> : <>{NestedList}</>}
     </div>
   );
 };
@@ -349,7 +331,7 @@ const ReactJsonPrint: React.FunctionComponent<ReactJsonPrintProps> = (props: Rea
 ReactJsonPrint.defaultProps = {
   dataObject: null,
   dataString: undefined,
-  objectKey: 'DATA',
+  objectKey: "DATA",
   expanded: undefined,
   depth: 0,
   currentDepth: undefined,
